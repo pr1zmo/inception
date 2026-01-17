@@ -1,0 +1,73 @@
+services:
+  nginx:
+    container_name: nginx
+    build:
+      context: ./requirements/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "443:443"
+    networks:
+      - inception
+    volumes:
+      - wordpress_data:/var/www/html
+    env_file:
+      - ../.env
+    restart: always
+  
+  wordpress:
+    container_name: wordpress
+    build:
+      context: ./requirements/wordpress
+      dockerfile: Dockerfile
+    networks:
+      - inception
+    env_file:
+      - ../.env
+    depends_on:
+      - mariadb
+    volumes:
+      - wordpress_data:/var/www/html
+    restart: always
+    secrets:
+      - wordpress_db_password
+  
+  mariadb:
+    container_name: mariadb
+    build:
+      context: ./requirements/mariadb
+      dockerfile: Dockerfile
+    networks:
+      - inception
+    env_file:
+      - ../.env
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    restart: always
+    secrets:
+      - wordpress_db_password
+      - wordpress_root_password
+    
+networks:
+  inception:
+    driver: bridge
+
+volumes:
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/prizmo/data/wordpress
+    
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/prizmo/data/mariadb
+
+secrets:
+  wordpress_db_password:
+    file: ./secrets/wordpress_db_password.txt
+  wordpress_root_password:
+    file: ./secrets/wordpress_root_password.txt
