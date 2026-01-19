@@ -1,19 +1,30 @@
+# Use Debian Bookworm as base image
 FROM debian:bookworm
 
-RUN apt-get update && apt-get install -y \
+# Install NGINX and OpenSSL
+RUN apt-get update && \
+    apt-get install -y \
     nginx \
-    openssl \
-    && rm -rf /var/lib/apt/lists/*
+    openssl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create SSL directory
+RUN mkdir -p /etc/nginx/ssl
 
 # Generate self-signed SSL certificate
-RUN mkdir -p /etc/nginx/ssl && \
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /etc/nginx/ssl/nginx.key \
     -out /etc/nginx/ssl/nginx.crt \
-    -subj "/C=FR/ST=Paris/L=Paris/O=42/OU=42/CN=localhost"
+    -subj "/C=MA/ST=Marrakesh/L=BenGuerir/O=42/OU=42/CN=zelbassa.42.fr"
 
-COPY conf/nginx.conf /etc/nginx/nginx.conf
+# Remove default site
+RUN rm -f /etc/nginx/sites-enabled/default
 
+# Copy NGINX configuration
+COPY conf/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose HTTPS port
 EXPOSE 443
 
+# Start NGINX in foreground
 CMD ["nginx", "-g", "daemon off;"]
