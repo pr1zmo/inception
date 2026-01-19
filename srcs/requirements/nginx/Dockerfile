@@ -23,8 +23,8 @@ RUN rm -f /etc/nginx/sites-enabled/default
 # Copy NGINX configuration
 COPY conf/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose HTTPS port
-EXPOSE 443
+# Expose HTTPS for wordpress and HTTP for amdiner
+EXPOSE 443 8080
 
 # Start NGINX in foreground
 CMD ["nginx", "-g", "daemon off;"]
