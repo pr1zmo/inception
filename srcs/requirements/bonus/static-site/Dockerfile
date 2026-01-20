@@ -13,8 +13,8 @@ COPY tools/package.json .
 
 RUN npm install
 
-COPY srcs/index.html app/public/.
-COPY srcs/style.css app/public/.
+COPY srcs/index.html public/.
+COPY srcs/style.css public/.
 COPY tools/server.js .
 
 CMD ["node", "server.js"]
