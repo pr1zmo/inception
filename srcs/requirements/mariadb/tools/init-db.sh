@@ -19,33 +19,14 @@ if [ ! -d "/var/lib/mysql/${MYSQL_DATABASE}" ]; then
         mysql_install_db --user=mysql --datadir=/var/lib/mysql
     fi
     
-    # Start MariaDB in background temporarily
-    echo "Starting temporary MariaDB server..."
-    mysqld --user=mysql --datadir=/var/lib/mysql --skip-networking=0 &
-    MYSQL_PID=$!
-    
-    # Wait for MariaDB to be ready
-    echo "Waiting for MariaDB to start..."
-    for i in {30..0}; do
-        if mysqladmin ping &>/dev/null; then
-            echo "MariaDB is ready!"
-            break
-        fi
-        echo "Waiting... ($i)"
-        sleep 1
-    done
-    
-    if [ "$i" = 0 ]; then
-        echo "MariaDB failed to start"
-        exit 1
-    fi
-    
-    # Create database and user
-    echo "Creating database and user..."
-    mysql -u root <<-EOSQL
+    # Use bootstrap mode to initialize database and user
+    echo "Creating database and user using bootstrap mode..."
+    mysqld --user=mysql --bootstrap <<-EOSQL
+        USE mysql;
+        FLUSH PRIVILEGES;
+        
         -- Set root password
         ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
-        FLUSH PRIVILEGES;
         
         -- Create database
         CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
@@ -62,12 +43,6 @@ if [ ! -d "/var/lib/mysql/${MYSQL_DATABASE}" ]; then
 EOSQL
     
     echo "Database and user created successfully!"
-    
-    # Stop temporary MariaDB
-    echo "Stopping temporary server..."
-    mysqladmin -u root -p"${MYSQL_ROOT_PASSWORD}" shutdown
-    wait $MYSQL_PID
-    
     echo "MariaDB initialization complete!"
 else
     echo "Database '${MYSQL_DATABASE}' already exists - skipping initialization"
@@ -75,4 +50,4 @@ fi
 
 echo "Starting MariaDB server..."
 # Start MariaDB in foreground (PID 1)
-exec mysqld --user=mysql --console --bind-address=0.0.0.0
+exec mysqld --user=mysql --bind-address=0.0.0.0

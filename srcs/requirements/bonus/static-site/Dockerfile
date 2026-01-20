@@ -1,10 +1,20 @@
 FROM debian:bookworm
 
-RUN mkdir -p /var/www/portfolio
+RUN apt-get update && apt-get install -y curl\
+	&& curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+	&& apt-get install -y nodejs \
+	&& rm -Rf /var/lib/apt/lists/*
 
-COPY ./srcs/index.html /var/www/portfolio/index.html
-COPY ./srcs/style.css /var/www/portfolio/style.css
+WORKDIR /usr/app
 
-RUN chown -R www-data:www-data /var/www/portfolio
+RUN mkdir -p /usr/app/public
 
-CMD ["tail", "-f"]
+COPY tools/package.json .
+
+RUN npm install
+
+COPY srcs/index.html app/public/.
+COPY srcs/style.css app/public/.
+COPY tools/server.js .
+
+CMD ["node", "server.js"]

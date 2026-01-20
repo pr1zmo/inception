@@ -5,11 +5,9 @@ services:
     build:
       context: ./requirements/nginx
       dockerfile: Dockerfile
-    image: nginx
     ports:
       - "443:443"
       - "8081:8081"
-      - "8082:8082"
     volumes:
       - wordpress_data:/var/www/html
     networks:
@@ -26,7 +24,6 @@ services:
     build:
       context: ./requirements/wordpress
       dockerfile: Dockerfile
-    image: wordpress
     volumes:
       - wordpress_data:/var/www/html
     networks:
@@ -62,7 +59,6 @@ services:
     build:
       context: ./requirements/mariadb
       dockerfile: Dockerfile
-    image: mariadb
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
@@ -83,7 +79,6 @@ services:
     build:
       context: ./requirements/bonus/redis
       dockerfile: Dockerfile
-    image: redis
     networks:
       - inception_network
     restart: unless-stopped
@@ -94,7 +89,6 @@ services:
     build:
       context: ./requirements/bonus/ftp
       dockerfile: Dockerfile
-    image: ftp
     ports:
       - "21:21"
       - "21000-21010:21000-21010"
@@ -116,7 +110,6 @@ services:
     build:
       context: ./requirements/bonus/adminer
       dockerfile: Dockerfile
-    image: adminer
     networks:
       - inception_network
     depends_on:
@@ -129,9 +122,10 @@ services:
     build:
       context: ./requirements/bonus/static-site
       dockerfile: Dockerfile
-    image: static-site
     networks:
       - inception_network
+    ports:
+      - "8082:8082"
     restart: unless-stopped
 
   # BONUS: Portainer (Docker Management)
@@ -140,7 +134,6 @@ services:
     build:
       context: ./requirements/bonus/portainer
       dockerfile: Dockerfile
-    image: portainer
     ports:
       - "9443:9443"
     volumes:
