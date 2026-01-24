@@ -14,10 +14,10 @@ GitHub Copilot: # Docker Internals: The Deep Dive
                           ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                       Docker Daemon (dockerd)                   │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌───────────┐ │
-│  │   Image     │ │   Network   │ │   Volume    │ │ Container │ │
-│  │   Service   │ │   Driver    │ │   Driver    │ │  Runtime  │ │
-│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘│
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌───────────┐  │
+│  │   Image     │ │   Network   │ │   Volume    │ │ Container │  │
+│  │   Service   │ │   Driver    │ │   Driver    │ │  Runtime  │  │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └───────────┘  │
 └─────────────────────────┬───────────────────────────────────────┘
                           │ gRPC
                           ▼
@@ -41,9 +41,9 @@ GitHub Copilot: # Docker Internals: The Deep Dive
                           ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Linux Kernel Primitives                      │
-│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌─────────────────┐ │
-│  │Namespaces │ │  cgroups  │ │ seccomp   │ │CapabilitiesLSM │ │
-│  └───────────┘ └───────────┘ └───────────┘ └─────────────────┘ │
+│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌─────────────────┐  │
+│  │Namespaces │ │  cgroups  │ │ seccomp   │ │CapabilitiesLSM  │  │
+│  └───────────┘ └───────────┘ └───────────┘ └─────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -60,20 +60,20 @@ Namespaces create isolated views of system resources. Each container gets its ow
 │                         HOST KERNEL                                │
 ├────────────────────────────────────────────────────────────────────┤
 │                                                                    │
-│  ┌─────────────────────┐      ┌─────────────────────┐             │
-│  │   Container A       │      │   Container B       │             │
-│  │                     │      │                     │             │
-│  │ PID NS: 1,2,3...    │      │ PID NS: 1,2,3...    │  ◄── Same   │
-│  │ NET NS: eth0,lo     │      │ NET NS: eth0,lo     │      PIDs!  │
-│  │ MNT NS: /,/proc...  │      │ MNT NS: /,/proc...  │             │
-│  │ UTS NS: hostname    │      │ UTS NS: hostname    │             │
-│  │ IPC NS: shm,sem,mq  │      │ IPC NS: shm,sem,mq  │             │
-│  │ USER NS: uid/gid    │      │ USER NS: uid/gid    │             │
-│  │ CGROUP NS           │      │ CGROUP NS           │             │
-│  └─────────────────────┘      └─────────────────────┘             │
+│  ┌─────────────────────┐      ┌─────────────────────┐              │
+│  │   Container A       │      │   Container B       │              │
+│  │                     │      │                     │              │
+│  │ PID NS: 1,2,3...    │      │ PID NS: 1,2,3...    │  ◄── Same    │
+│  │ NET NS: eth0,lo     │      │ NET NS: eth0,lo     │      PIDs!   │
+│  │ MNT NS: /,/proc...  │      │ MNT NS: /,/proc...  │              │
+│  │ UTS NS: hostname    │      │ UTS NS: hostname    │              │
+│  │ IPC NS: shm,sem,mq  │      │ IPC NS: shm,sem,mq  │              │
+│  │ USER NS: uid/gid    │      │ USER NS: uid/gid    │              │
+│  │ CGROUP NS           │      │ CGROUP NS           │              │
+│  └─────────────────────┘      └─────────────────────┘              │
 │                                                                    │
-│  Host sees: Container A PID 1 = Host PID 4523                     │
-│             Container B PID 1 = Host PID 4891                     │
+│  Host sees: Container A PID 1 = Host PID 4523                      │
+│             Container B PID 1 = Host PID 4891                      │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -136,9 +136,9 @@ pid_t pid = clone(container_main, stack,
 │                      cgroups v1 (legacy)                        │
 │  Multiple hierarchies - one per controller                      │
 │                                                                 │
-│  /sys/fs/cgroup/cpu/docker/abc123/                             │
-│  /sys/fs/cgroup/memory/docker/abc123/                          │
-│  /sys/fs/cgroup/blkio/docker/abc123/                           │
+│  /sys/fs/cgroup/cpu/docker/abc123/                              │
+│  /sys/fs/cgroup/memory/docker/abc123/                           │
+│  /sys/fs/cgroup/blkio/docker/abc123/                            │
 │                 ▲                                               │
 │                 │ Different trees!                              │
 └─────────────────────────────────────────────────────────────────┘
@@ -147,11 +147,11 @@ pid_t pid = clone(container_main, stack,
 │                      cgroups v2 (unified)                       │
 │  Single hierarchy - all controllers in one tree                 │
 │                                                                 │
-│  /sys/fs/cgroup/docker/abc123/                                 │
-│  ├── cpu.max                                                   │
-│  ├── memory.max                                                │
-│  ├── io.max                                                    │
-│  └── pids.max                                                  │
+│  /sys/fs/cgroup/docker/abc123/                                  │
+│  ├── cpu.max                                                    │
+│  ├── memory.max                                                 │
+│  ├── io.max                                                     │
+│  └── pids.max                                                   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -167,9 +167,9 @@ pid_t pid = clone(container_main, stack,
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │              Seccomp BPF Filter                             ││
 │  │                                                             ││
-│  │  if syscall == clone && flags & CLONE_NEWUSER:             ││
-│  │      return EPERM                                           ││
-│  │  if syscall in [reboot, kexec_load, mount...]:             ││
+│  │  if syscall == clone && flags & CLONE_NEWUSER:              │|
+│  │      return EPERM                                           │|
+│  │  if syscall in [reboot, kexec_load, mount...]:              │|
 │  │      return EPERM                                           ││
 │  │  else:                                                      ││
 │  │      return ALLOW                                           ││
@@ -192,9 +192,9 @@ Docker's default seccomp profile blocks ~44 syscalls including:
 Full root = ALL 40+ capabilities
 
 Docker default drops dangerous ones:
-┌────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────┐
 │  KEPT (14)              │  DROPPED               │
-├────────────────────────────────────────────────────┤
+├──────────────────────────────────────────────────┤
 │  CAP_CHOWN              │  CAP_SYS_ADMIN ✗       │
 │  CAP_DAC_OVERRIDE       │  CAP_NET_ADMIN ✗       │
 │  CAP_FOWNER             │  CAP_SYS_PTRACE ✗      │
@@ -209,7 +209,7 @@ Docker default drops dangerous ones:
 │  CAP_MKNOD              │                        │
 │  CAP_AUDIT_WRITE        │                        │
 │  CAP_SETFCAP            │                        │
-└────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────┘
 ```
 
 ---
@@ -219,28 +219,28 @@ Docker default drops dangerous ones:
 ### Image Layer Structure
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Container (Running)                         │
-│                                                                 │
+┌────────────────────────────────────────────────────────────────┐
+│                     Container (Running)                        │
+│                                                                │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │            Container Layer (R/W) - thin                 │   │
 │  │   Copy-on-Write: modifications stored here              │   │
 │  └─────────────────────────────────────────────────────────┘   │
-│                              │                                  │
-│                              ▼                                  │
+│                              │                                 │
+│                              ▼                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │          Image Layer 3 (R/O) - COPY app.py             │   │
+│  │          Image Layer 3 (R/O) - COPY app.py              │   │
 │  └─────────────────────────────────────────────────────────┘   │
-│                              │                                  │
+│                              │                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │          Image Layer 2 (R/O) - RUN pip install         │   │
+│  │          Image Layer 2 (R/O) - RUN pip install          │   │
 │  └─────────────────────────────────────────────────────────┘   │
-│                              │                                  │
+│                              │                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │          Image Layer 1 (R/O) - FROM python:3.9         │   │
+│  │          Image Layer 1 (R/O) - FROM python:3.9          │   │
 │  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
 ```
 
 ### OverlayFS: How Union Mounts Work
@@ -297,12 +297,12 @@ mount -t overlay overlay \
 │       Not found                                                 │
 │           │                                                     │
 │           ▼                                                     │
-│   Check lowerdir[0] (top image layer)                          │
+│   Check lowerdir[0] (top image layer)                           │
 │           │                                                     │
 │       Not found                                                 │
 │           │                                                     │
 │           ▼                                                     │
-│   Check lowerdir[1] (base layer)                               │
+│   Check lowerdir[1] (base layer)                                │
 │           │                                                     │
 │       FOUND! Return file                                        │
 │                                                                 │
@@ -314,11 +314,11 @@ mount -t overlay overlay \
 │   Process writes to /etc/passwd                                 │
 │           │                                                     │
 │           ▼                                                     │
-│   Copy ENTIRE file from lowerdir to upperdir                   │
-│   (even for 1-byte change - this is the "copy" in CoW)         │
+│   Copy ENTIRE file from lowerdir to upperdir                    │
+│   (even for 1-byte change - this is the "copy" in CoW)          │
 │           │                                                     │
 │           ▼                                                     │
-│   Modify the copy in upperdir                                  │
+│   Modify the copy in upperdir                                   │
 │           │                                                     │
 │           ▼                                                     │
 │   Future reads see upperdir version                             │
@@ -332,11 +332,11 @@ mount -t overlay overlay \
 │   Process deletes /etc/passwd                                   │
 │           │                                                     │
 │           ▼                                                     │
-│   Create "whiteout" file in upperdir                           │
-│   Character device: mknod upperdir/etc/passwd c 0 0            │
+│   Create "whiteout" file in upperdir                            │
+│   Character device: mknod upperdir/etc/passwd c 0 0             │
 │           │                                                     │
 │           ▼                                                     │
-│   Overlay hides the lowerdir file                              │
+│   Overlay hides the lowerdir file                               │
 │   File appears deleted in merged view                           │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
@@ -351,17 +351,17 @@ Layer ID = SHA256 of layer tar content (diffID)
          ≠ SHA256 of compressed blob (digest)
 
 ┌─────────────────────────────────────────────────────────────────┐
-│  Registry stores:     Compressed blobs with digest             │
-│  Docker stores:       Uncompressed layers with diffID          │
+│  Registry stores:     Compressed blobs with digest              │
+│  Docker stores:       Uncompressed layers with diffID           │
 │                                                                 │
 │  Manifest:                                                      │
 │  {                                                              │
 │    "config": {                                                  │
-│      "digest": "sha256:abc123...",    ◄── Image config         │
+│      "digest": "sha256:abc123...",    ◄── Image config          │
 │    },                                                           │
 │    "layers": [                                                  │
-│      {"digest": "sha256:def456..."},  ◄── Compressed blob      │
-│      {"digest": "sha256:789xyz..."}                            │
+│      {"digest": "sha256:def456..."},  ◄── Compressed blob       │
+│      {"digest": "sha256:789xyz..."}                             │
 │    ]                                                            │
 │  }                                                              │
 │                                                                 │
@@ -369,7 +369,7 @@ Layer ID = SHA256 of layer tar content (diffID)
 │  {                                                              │
 │    "rootfs": {                                                  │
 │      "diff_ids": [                                              │
-│        "sha256:aaa...",               ◄── Uncompressed SHA256  │
+│        "sha256:aaa...",               ◄── Uncompressed SHA256   │
 │        "sha256:bbb..."                                          │
 │      ]                                                          │
 │    }                                                            │
@@ -387,12 +387,12 @@ Layer ID = SHA256 of layer tar content (diffID)
 ┌──────────────────────────────────────────────────────────────────┐
 │                           HOST                                   │
 │                                                                  │
-│  ┌─────────────────┐          ┌─────────────────┐               │
-│  │   Container A   │          │   Container B   │               │
-│  │                 │          │                 │               │
-│  │   eth0          │          │   eth0          │               │
-│  │   172.17.0.2    │          │   172.17.0.3    │               │
-│  └────────┬────────┘          └────────┬────────┘               │
+│  ┌─────────────────┐          ┌─────────────────┐                │
+│  │   Container A   │          │   Container B   │                │
+│  │                 │          │                 │                │
+│  │   eth0          │          │   eth0          │                │
+│  │   172.17.0.2    │          │   172.17.0.3    │                │
+│  └────────┬────────┘          └────────┬────────┘                │
 │           │                            │                         │
 │           │ veth pair                  │ veth pair               │
 │           │                            │                         │
@@ -426,17 +426,17 @@ veth = virtual ethernet pair (like a network cable with 2 ends)
 ┌────────────────────────────────────────────────────────────────┐
 │                                                                │
 │  Container Network Namespace          Host Network Namespace   │
-│  ┌──────────────────────┐            ┌───────────────────────┐│
-│  │                      │            │                       ││
-│  │   eth0 ◄─────────────────────────► veth123abc            ││
-│  │   (inside container)  │  veth pair │  (on docker0 bridge) ││
-│  │                      │            │                       ││
-│  └──────────────────────┘            └───────────────────────┘│
+│  ┌──────────────────────┐            ┌───────────────────────┐ │
+│  │                      │            │                       │ │
+│  │   eth0 ◄─────────────────────────► veth123abc             │ │
+│  │   (inside container)  │  veth pair │  (on docker0 bridge) │ │
+│  │                      │            │                       │ │
+│  └──────────────────────┘            └───────────────────────┘ │
 │                                                                │
 │  Created by:                                                   │
-│  ip link add veth123abc type veth peer name eth0              │
-│  ip link set eth0 netns <container-pid>                       │
-│  ip link set veth123abc master docker0                        │
+│  ip link add veth123abc type veth peer name eth0               │
+│  ip link set eth0 netns <container-pid>                        │
+│  ip link set veth123abc master docker0                         │
 │                                                                │
 └────────────────────────────────────────────────────────────────┘
 ```
@@ -462,15 +462,15 @@ veth = virtual ethernet pair (like a network cable with 2 ends)
 ┌──────────────────────────────────────────────────────────────────┐
 │                       --network=bridge (default)                 │
 │                                                                  │
-│   Container ──► veth ──► docker0 bridge ──► NAT ──► Host NIC    │
-│   Own IP, isolated, NAT for outbound                            │
+│   Container ──► veth ──► docker0 bridge ──► NAT ──► Host NIC     │
+│   Own IP, isolated, NAT for outbound                             │
 └──────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────┐
 │                       --network=host                             │
 │                                                                  │
 │   Container shares host network namespace entirely               │
-│   No isolation, no NAT overhead, sees host's eth0               │
+│   No isolation, no NAT overhead, sees host's eth0                │
 │   Port conflicts with host services                              │
 └──────────────────────────────────────────────────────────────────┘
 
@@ -485,7 +485,7 @@ veth = virtual ethernet pair (like a network cable with 2 ends)
 │                       --network=container:X                      │
 │                                                                  │
 │   Share network namespace with container X                       │
-│   Same IP, same ports, like localhost between them              │
+│   Same IP, same ports, like localhost between them               │
 │   Used by Kubernetes pods (pause container pattern)              │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -498,23 +498,23 @@ veth = virtual ethernet pair (like a network cable with 2 ends)
 │                                                                 │
 │   Container A           Container B                             │
 │   name: web             name: db                                │
-│   ┌─────────────┐       ┌─────────────┐                        │
-│   │             │       │             │                        │
-│   │ /etc/resolv.conf:   │             │                        │
-│   │ nameserver          │             │                        │
-│   │ 127.0.0.11 ◄────────────────────────────┐                  │
-│   │             │       │             │     │                  │
-│   └─────────────┘       └─────────────┘     │                  │
-│                                             │                  │
-│   ┌─────────────────────────────────────────┴───────────────┐  │
-│   │              Docker Embedded DNS Server                 │  │
-│   │              (127.0.0.11:53)                           │  │
-│   │                                                         │  │
-│   │   "web" resolves to 172.18.0.2                         │  │
-│   │   "db" resolves to 172.18.0.3                          │  │
-│   │                                                         │  │
-│   │   Unknown names → forwarded to host's resolv.conf      │  │
-│   └─────────────────────────────────────────────────────────┘  │
+│   ┌─────────────┐       ┌─────────────┐                         │
+│   │             │       │             │                         │
+│   │ /etc/resolv.conf:   │             │                         │
+│   │ nameserver          │             │                         │
+│   │ 127.0.0.11 ◄────────────────────────────┐                   │
+│   │             │       │             │     │                   │
+│   └─────────────┘       └─────────────┘     │                   │
+│                                             │                   │
+│   ┌─────────────────────────────────────────┴───────────────┐   │
+│   │              Docker Embedded DNS Server                 │   │
+│   │              (127.0.0.11:53)                            │   │
+│   │                                                         │   │
+│   │   "web" resolves to 172.18.0.2                          │   │
+│   │   "db" resolves to 172.18.0.3                           │   │
+│   │                                                         │   │
+│   │   Unknown names → forwarded to host's resolv.conf       │   │
+│   └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -531,15 +531,15 @@ veth = virtual ethernet pair (like a network cable with 2 ends)
 │                                                                 │
 │   docker volume create mydata                                   │
 │                                                                 │
-│   /var/lib/docker/volumes/mydata/_data/                        │
+│   /var/lib/docker/volumes/mydata/_data/                         │
 │           │                                                     │
 │           │ bind mount                                          │
 │           ▼                                                     │
-│   Container: /app/data                                         │
+│   Container: /app/data                                          │
 │                                                                 │
-│   • Managed by Docker                                          │
-│   • Portable, named reference                                  │
-│   • Metadata in /var/lib/docker/volumes/metadata.db            │
+│   • Managed by Docker                                           │
+│   • Portable, named reference                                   │
+│   • Metadata in /var/lib/docker/volumes/metadata.db             │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
@@ -561,34 +561,34 @@ veth = virtual ethernet pair (like a network cable with 2 ends)
 ┌─────────────────────────────────────────────────────────────────┐
 │                     tmpfs Mounts                                │
 │                                                                 │
-│   docker run --tmpfs /app/cache                                │
+│   docker run --tmpfs /app/cache                                 │
 │                                                                 │
-│   RAM (host memory)                                            │
+│   RAM (host memory)                                             │
 │           │                                                     │
 │           │ tmpfs mount                                         │
 │           ▼                                                     │
-│   Container: /app/cache                                        │
+│   Container: /app/cache                                         │
 │                                                                 │
-│   • In-memory only                                             │
-│   • Never written to disk                                      │
-│   • Lost on container stop                                     │
-│   • Good for secrets, caches                                   │
+│   • In-memory only                                              │
+│   • Never written to disk                                       │
+│   • Lost on container stop                                      │
+│   • Good for secrets, caches                                    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### How Volumes Survive Container Deletion
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│   Container Lifecycle              Volume Lifecycle             │
+┌────────────────────────────────────────────────────────────────┐
+│                                                                │
+│   Container Lifecycle              Volume Lifecycle            │
 │   ─────────────────────            ─────────────────           │
-│                                                                 │
+│                                                                │
 │   create ─────┐                    create ─────┐               │
 │               ▼                                ▼               │
 │   start ──────┤                    (no state)  │               │
 │               │                                │               │
-│   running ◄───┤ ◄──── mount ────► exists ◄────┤               │
+│   running ◄───┤ ◄──── mount ────► exists ◄────┤                │
 │               │                                │               │
 │   stop ───────┤                                │               │
 │               │                                │               │
@@ -601,8 +601,8 @@ veth = virtual ethernet pair (like a network cable with 2 ends)
 │                    docker volume rm ──────────►│               │
 │                                                ▼               │
 │                                           (deleted)            │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -654,7 +654,7 @@ docker run nginx
 │ 1. Parse OCI runtime spec (config.json)                         │
 │ 2. Set up namespaces (clone())                                  │
 │ 3. Configure cgroups                                            │
-│ 4. Set up rootfs (pivot_root or chroot)                        │
+│ 4. Set up rootfs (pivot_root or chroot)                         │
 │ 5. Drop capabilities                                            │
 │ 6. Apply seccomp filter                                         │
 │ 7. execve() into container entrypoint                           │
@@ -734,9 +734,9 @@ docker run nginx
 ┌─────────────────────────────────────────────────────────────────┐
 │                Normal Linux System                              │
 │                                                                 │
-│   PID 1: /sbin/init (systemd/sysvinit)                         │
+│   PID 1: /sbin/init (systemd/sysvinit)                          │
 │   │                                                             │
-│   ├── Reaps zombie processes (wait() on orphans)               │
+│   ├── Reaps zombie processes (wait() on orphans)                │
 │   ├── Forwards signals to children                              │
 │   └── Has special signal handling                               │
 │                                                                 │
@@ -745,16 +745,16 @@ docker run nginx
 ┌─────────────────────────────────────────────────────────────────┐
 │                Container (naive)                                │
 │                                                                 │
-│   PID 1: nginx (or your app)                                   │
+│   PID 1: nginx (or your app)                                    │
 │   │                                                             │
-│   ├── NOT designed to be PID 1                                 │
-│   ├── Doesn't reap zombies → process table fills up            │
-│   ├── May ignore SIGTERM (PID 1 special handling)              │
+│   ├── NOT designed to be PID 1                                  │
+│   ├── Doesn't reap zombies → process table fills up             │
+│   ├── May ignore SIGTERM (PID 1 special handling)               │
 │   └── Child processes orphaned incorrectly                      │
 │                                                                 │
-│   SIGTERM behavior for PID 1:                                  │
+│   SIGTERM behavior for PID 1:                                   │
 │   • Normal process: default handler = terminate                 │
-│   • PID 1: default handler = IGNORE (for init safety)          │
+│   • PID 1: default handler = IGNORE (for init safety)           │
 │   • Your app must explicitly handle SIGTERM!                    │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
@@ -770,14 +770,14 @@ docker stop <container>
 │   1. Send SIGTERM to PID 1                                      │
 │        │                                                        │
 │        ▼                                                        │
-│   2. Wait for graceful shutdown (default: 10 seconds)          │
+│   2. Wait for graceful shutdown (default: 10 seconds)           │
 │        │                                                        │
 │        ├── Process exits? → done                                │
 │        │                                                        │
 │        └── Timeout expires?                                     │
 │                 │                                               │
 │                 ▼                                               │
-│   3. Send SIGKILL (cannot be caught or ignored)                │
+│   3. Send SIGKILL (cannot be caught or ignored)                 │
 │        │                                                        │
 │        ▼                                                        │
 │   4. Process forcefully terminated                              │
@@ -815,10 +815,10 @@ CMD ["myapp"]      # Runs as: myapp (app is PID 1)
 │                                                                 │
 │   Shell Form: CMD myapp                                         │
 │                                                                 │
-│   PID 1: /bin/sh -c "myapp"                                    │
+│   PID 1: /bin/sh -c "myapp"                                     │
 │   └── PID 2: myapp                                              │
 │                                                                 │
-│   SIGTERM sent to PID 1 (shell)                                │
+│   SIGTERM sent to PID 1 (shell)                                 │
 │   Shell exits, myapp becomes orphan                             │
 │   myapp doesn't receive SIGTERM!                                │
 │                                                                 │
@@ -843,7 +843,7 @@ CMD ["myapp"]      # Runs as: myapp (app is PID 1)
 │   └── PID 2: myapp                                              │
 │       └── PID 3: child_process                                  │
 │                                                                 │
-│   SIGTERM → tini → forwards to myapp                           │
+│   SIGTERM → tini → forwards to myapp                            │
 │   Zombie processes reaped by tini                               │
 │   Orphaned children adopted by tini                             │
 │                                                                 │
@@ -918,34 +918,34 @@ State data stored in: /var/lib/docker/containers/<id>/
 │            (Low-Level Build)                                    │
 │                           │                                     │
 │                           ▼                                     │
-│         ┌─────────────────────────────────────┐                │
-│         │            LLB DAG                   │                │
-│         │    (Directed Acyclic Graph)          │                │
-│         │                                      │                │
-│         │   ┌─────┐     ┌─────┐               │                │
-│         │   │FROM │────►│ RUN │               │                │
-│         │   └─────┘     └──┬──┘               │                │
-│         │                  │                   │                │
-│         │            ┌─────┴─────┐            │                │
-│         │            ▼           ▼            │                │
-│         │         ┌─────┐     ┌─────┐         │                │
-│         │         │COPY │     │ RUN │         │                │
-│         │         └──┬──┘     └──┬──┘         │                │
-│         │            │           │            │                │
-│         │            └─────┬─────┘            │                │
-│         │                  ▼                  │                │
-│         │              ┌─────┐                │                │
-│         │              │FINAL│                │                │
-│         │              └─────┘                │                │
-│         └─────────────────────────────────────┘                │
+│         ┌─────────────────────────────────────┐                 │
+│         │            LLB DAG                  │                 │
+│         │    (Directed Acyclic Graph)         │                 │
+│         │                                     │                 │
+│         │   ┌─────┐     ┌─────┐               │                 │
+│         │   │FROM │────►│ RUN │               │                 │
+│         │   └─────┘     └──┬──┘               │                 │
+│         │                  │                  │                 │
+│         │            ┌─────┴─────┐            │                 │
+│         │            ▼           ▼            │                 │
+│         │         ┌─────┐     ┌─────┐         │                 │
+│         │         │COPY │     │ RUN │         │                 │
+│         │         └──┬──┘     └──┬──┘         │                 │
+│         │            │           │            │                 │
+│         │            └─────┬─────┘            │                 │
+│         │                  ▼                  │                 │
+│         │              ┌─────┐                │                 │
+│         │              │FINAL│                │                 │
+│         │              └─────┘                │                 │
+│         └─────────────────────────────────────┘                 │
 │                           │                                     │
 │              Parallel execution of                              │
 │              independent vertices                               │
 │                           │                                     │
 │                           ▼                                     │
-│                   ┌───────────────┐                            │
-│                   │  Cache Check  │                            │
-│                   └───────────────┘                            │
+│                   ┌───────────────┐                             │
+│                   │  Cache Check  │                             │
+│                   └───────────────┘                             │
 │                           │                                     │
 │         Cache hit?        │        Cache miss?                  │
 │              │            │              │                      │
@@ -970,32 +970,32 @@ State data stored in: /var/lib/docker/containers/<id>/
 │       instruction_specific_data                                 │
 │   )                                                             │
 │                                                                 │
-│   ┌──────────────────────────────────────────────────────────┐ │
-│   │ RUN apt-get update                                        │ │
-│   │                                                           │ │
-│   │ Cache key = hash(parent, "RUN apt-get update")           │ │
-│   │ No file context considered!                               │ │
-│   │ ⚠️  Will use stale cache even if repos changed           │ │
-│   └──────────────────────────────────────────────────────────┘ │
+│   ┌──────────────────────────────────────────────────────────┐  │
+│   │ RUN apt-get update                                       │  │
+│   │                                                          │  │
+│   │ Cache key = hash(parent, "RUN apt-get update")           │  │
+│   │ No file context considered!                              │  │
+│   │ ⚠️  Will use stale cache even if repos changed           │  │
+│   └──────────────────────────────────────────────────────────┘  │
 │                                                                 │
-│   ┌──────────────────────────────────────────────────────────┐ │
-│   │ COPY . /app                                               │ │
-│   │                                                           │ │
-│   │ Cache key = hash(                                         │ │
-│   │     parent,                                               │ │
-│   │     "COPY . /app",                                        │ │
-│   │     content_hash_of_all_copied_files                      │ │
-│   │ )                                                         │ │
-│   │ ✓ Cache invalidated when any file changes                │ │
-│   └──────────────────────────────────────────────────────────┘ │
+│   ┌──────────────────────────────────────────────────────────┐  │
+│   │ COPY . /app                                              │  │
+│   │                                                          │  │
+│   │ Cache key = hash(                                        │  │
+│   │     parent,                                              │  │
+│   │     "COPY . /app",                                       │  │
+│   │     content_hash_of_all_copied_files                     │  │
+│   │ )                                                        │  │
+│   │ ✓ Cache invalidated when any file changes                │  │
+│   └──────────────────────────────────────────────────────────┘  │
 │                                                                 │
-│   ┌──────────────────────────────────────────────────────────┐ │
-│   │ ARG VERSION=1.0                                           │ │
-│   │ RUN echo $VERSION                                         │ │
-│   │                                                           │ │
-│   │ Cache key = hash(parent, "RUN echo $VERSION", "1.0")     │ │
-│   │ Different ARG value = different cache key                 │ │
-│   └──────────────────────────────────────────────────────────┘ │
+│   ┌──────────────────────────────────────────────────────────┐  │
+│   │ ARG VERSION=1.0                                          │  │
+│   │ RUN echo $VERSION                                        │  │
+│   │                                                          │  │
+│   │ Cache key = hash(parent, "RUN echo $VERSION", "1.0")     │  │
+│   │ Different ARG value = different cache key                │  │
+│   └──────────────────────────────────────────────────────────┘  │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -1019,25 +1019,25 @@ CMD ["myapp"]
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Multi-stage Internal                         │
 │                                                                 │
-│   Stage 0 (builder)          Stage 1 (final)                   │
-│   ┌─────────────────┐       ┌─────────────────┐                │
-│   │ golang:1.21     │       │ alpine:3.18     │                │
-│   │ base layer      │       │ base layer      │                │
-│   ├─────────────────┤       ├─────────────────┤                │
-│   │ WORKDIR /app    │       │                 │                │
-│   ├─────────────────┤       │                 │                │
-│   │ COPY . .        │       │                 │                │
-│   ├─────────────────┤       │                 │                │
-│   │ go build        │       │                 │                │
-│   │ (800MB image)   │──────►│ COPY myapp      │                │
-│   └─────────────────┘       │ (12MB binary)   │                │
-│          │                  ├─────────────────┤                │
-│          │                  │ (15MB image)    │                │
-│          ▼                  └─────────────────┘                │
-│   Not included in                   │                          │
-│   final image!                      ▼                          │
-│   (but cached for                Final output                  │
-│   rebuilds)                                                    │
+│   Stage 0 (builder)          Stage 1 (final)                    │
+│   ┌─────────────────┐       ┌─────────────────┐                 │
+│   │ golang:1.21     │       │ alpine:3.18     │                 │
+│   │ base layer      │       │ base layer      │                 │
+│   ├─────────────────┤       ├─────────────────┤                 │
+│   │ WORKDIR /app    │       │                 │                 │
+│   ├─────────────────┤       │                 │                 │
+│   │ COPY . .        │       │                 │                 │
+│   ├─────────────────┤       │                 │                 │
+│   │ go build        │       │                 │                 │
+│   │ (800MB image)   │──────►│ COPY myapp      │                 │
+│   └─────────────────┘       │ (12MB binary)   │                 │
+│          │                  ├─────────────────┤                 │
+│          │                  │ (15MB image)    │                 │
+│          ▼                  └─────────────────┘                 │
+│   Not included in                   │                           │
+│   final image!                      ▼                           │
+│   (but cached for                Final output                   │
+│   rebuilds)                                                     │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -1050,42 +1050,42 @@ CMD ["myapp"]
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Defense in Depth                             │
 │                                                                 │
-│   ┌─────────────────────────────────────────────────────────┐  │
-│   │ Layer 1: Namespaces                                      │  │
-│   │ • Process isolation (can't see host processes)          │  │
-│   │ • Network isolation (separate network stack)            │  │
-│   │ • Filesystem isolation (can't see host filesystem)      │  │
-│   └─────────────────────────────────────────────────────────┘  │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │ Layer 1: Namespaces                                     │   │
+│   │ • Process isolation (can't see host processes)          │   │
+│   │ • Network isolation (separate network stack)            │   │
+│   │ • Filesystem isolation (can't see host filesystem)      │   │
+│   └─────────────────────────────────────────────────────────┘   │
 │                              │                                  │
-│   ┌─────────────────────────────────────────────────────────┐  │
-│   │ Layer 2: cgroups                                         │  │
-│   │ • Resource limits (can't DOS the host)                  │  │
-│   │ • Memory limits, CPU limits, PID limits                 │  │
-│   └─────────────────────────────────────────────────────────┘  │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │ Layer 2: cgroups                                        │   │
+│   │ • Resource limits (can't DOS the host)                  │   │
+│   │ • Memory limits, CPU limits, PID limits                 │   │
+│   └─────────────────────────────────────────────────────────┘   │
 │                              │                                  │
-│   ┌─────────────────────────────────────────────────────────┐  │
-│   │ Layer 3: Capabilities                                    │  │
-│   │ • Dropped dangerous caps (can't load kernel modules)    │  │
-│   │ • Minimal privilege set                                 │  │
-│   └─────────────────────────────────────────────────────────┘  │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │ Layer 3: Capabilities                                   │   │
+│   │ • Dropped dangerous caps (can't load kernel modules)    │   │
+│   │ • Minimal privilege set                                 │   │
+│   └─────────────────────────────────────────────────────────┘   │
 │                              │                                  │
-│   ┌─────────────────────────────────────────────────────────┐  │
-│   │ Layer 4: seccomp                                         │  │
-│   │ • Syscall filtering (can't call dangerous syscalls)     │  │
-│   │ • ~44 syscalls blocked by default                       │  │
-│   └─────────────────────────────────────────────────────────┘  │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │ Layer 4: seccomp                                        │   │
+│   │ • Syscall filtering (can't call dangerous syscalls)     │   │
+│   │ • ~44 syscalls blocked by default                       │   │
+│   └─────────────────────────────────────────────────────────┘   │
 │                              │                                  │
-│   ┌─────────────────────────────────────────────────────────┐  │
-│   │ Layer 5: AppArmor/SELinux                               │  │
-│   │ • Mandatory Access Control                              │  │
-│   │ • File access restrictions                              │  │
-│   └─────────────────────────────────────────────────────────┘  │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │ Layer 5: AppArmor/SELinux                               │   │
+│   │ • Mandatory Access Control                              │   │
+│   │ • File access restrictions                              │   │
+│   └─────────────────────────────────────────────────────────┘   │
 │                              │                                  │
-│   ┌─────────────────────────────────────────────────────────┐  │
-│   │ Layer 6: Read-only rootfs + tmpfs                       │  │
-│   │ • Immutable container filesystem                        │  │
-│   │ • Writes only to explicit volumes                       │  │
-│   └─────────────────────────────────────────────────────────┘  │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │ Layer 6: Read-only rootfs + tmpfs                       │   │
+│   │ • Immutable container filesystem                        │   │
+│   │ • Writes only to explicit volumes                       │   │
+│   └─────────────────────────────────────────────────────────┘   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
