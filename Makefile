@@ -6,7 +6,7 @@ include .env
 
 ENV_FILE		:= .env
 COMPOSE_FILE    := srcs/docker-compose.yaml
-DC              := docker-compose --env-file ./$(ENV_FILE) -f $(COMPOSE_FILE)
+DC              := docker compose --env-file ./$(ENV_FILE) -f $(COMPOSE_FILE)
 DATA_DIR        := /home/$(USER)/data
 VOLUME_SERVICES := wordpress mariadb portainer
 

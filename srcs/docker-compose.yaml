@@ -39,19 +39,6 @@ services:
       - db_root_password
       - wp_admin_password
       - wp_user_password
-    environment:
-      - MYSQL_HOST=mariadb:3306
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
-      - WORDPRESS_DB_HOST=mariadb:3306
-      - WORDPRESS_DB_NAME=${MYSQL_DATABASE}
-      - WORDPRESS_DB_USER=${MYSQL_USER}
-      - DOMAIN_NAME=${DOMAIN_NAME}
-      - WP_ADMIN_USER=${WP_ADMIN_USER}
-      - WP_ADMIN_EMAIL=${WP_ADMIN_EMAIL}
-      - WP_USER=${WP_USER}
-      - WP_USER_EMAIL=${WP_USER_EMAIL}
-      - REDIS_HOST=redis:6379
 
   # MariaDB
   mariadb:
@@ -69,9 +56,6 @@ services:
     secrets:
       - db_password
       - db_root_password
-    environment:
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
 
   # BONUS: Redis Cache
   redis:
@@ -101,8 +85,6 @@ services:
       - ../.env
     secrets:
       - ftp_password
-    environment:
-      - FTP_USER=${FTP_USER}
 
   # BONUS: Adminer
   adminer:
@@ -127,18 +109,16 @@ services:
     ports:
       - "8082:8082"
     restart: unless-stopped
+    env_file:
+      - ../.env
 
-  # BONUS: Portainer (Docker Management)
-  portainer:
-    container_name: portainer
+  cuma:
+    container_name: cuma
     build:
-      context: ./requirements/bonus/portainer
+      context: ./requirements/bonus/cuma
       dockerfile: Dockerfile
     ports:
-      - "9443:9443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
+      - "3001:3001"
     networks:
       - inception_network
     restart: unless-stopped
