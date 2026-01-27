@@ -8,7 +8,7 @@ ENV_FILE		:= .env
 COMPOSE_FILE    := srcs/docker-compose.yaml
 DC              := docker compose --env-file ./$(ENV_FILE) -f $(COMPOSE_FILE)
 DATA_DIR        := /home/$(USER)/data
-VOLUME_SERVICES := wordpress mariadb portainer
+VOLUME_SERVICES := wordpress mariadb cuma
 
 # **************************************************************************** #
 #                                   RULES                                      #
@@ -27,6 +27,10 @@ dirs:
 		mkdir -p $(DATA_DIR)/$$service; \
 		echo "  - Created $(DATA_DIR)/$$service"; \
 	done
+
+setup-hosts:
+	@echo "Adding hosts entry (requires sudo)..."
+	@grep -q "$(DOMAIN_NAME)" /etc/hosts || echo "127.0.0.1 $(DOMAIN_NAME)" | sudo tee -a /etc/hosts
 
 down:
 	@echo "Stopping containers..."
