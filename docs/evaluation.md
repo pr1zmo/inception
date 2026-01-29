@@ -205,15 +205,15 @@ docker compose up -d --build
 
 **Answer:**
 
-| Aspect | Docker Containers | Virtual Machines |
-|--------|-------------------|------------------|
-| **Size** | MBs (shares kernel) | GBs (full OS) |
-| **Startup** | Seconds | Minutes |
-| **Performance** | Near-native | Hypervisor overhead |
-| **Isolation** | Process-level | Hardware-level |
-| **Resource usage** | Lightweight | Heavy |
-| **Portability** | Image = same everywhere | VM images are large |
-| **Density** | 100s per host | 10s per host |
+| Aspect              | Docker Containers       | Virtual Machines    |
+|---------------------|-------------------------|---------------------|
+| **Size**            | MBs (shares kernel)     | GBs (full OS)       |
+| **Startup**         | Seconds                 | Minutes             |
+| **Performance**     | Near-native             | Hypervisor overhead |
+| **Isolation**       | Process-level           | Hardware-level      |
+| **Resource usage**  | Lightweight             | Heavy               |
+| **Portability**     | Image = same everywhere | VM images are large |
+| **Density**         | 100s per host           | 10s per host        |
 
 **Key Differences Explained:**
 
