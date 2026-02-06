@@ -14,7 +14,7 @@ services:
       - inception_network
     depends_on:
       - wordpress
-    restart: unless-stopped
+    restart: always
     env_file:
       - ../.env
 
@@ -31,7 +31,7 @@ services:
     depends_on:
       - mariadb
       - redis
-    restart: unless-stopped
+    restart: always
     env_file:
       - ../.env
     secrets:
@@ -50,7 +50,7 @@ services:
       - mariadb_data:/var/lib/mysql
     networks:
       - inception_network
-    restart: unless-stopped
+    restart: always
     env_file:
       - ../.env
     secrets:
@@ -65,7 +65,7 @@ services:
       dockerfile: Dockerfile
     networks:
       - inception_network
-    restart: unless-stopped
+    restart: always
 
   # BONUS: FTP Server
   ftp:
@@ -80,7 +80,7 @@ services:
       - wordpress_data:/var/www/html
     networks:
       - inception_network
-    restart: unless-stopped
+    restart: always
     env_file:
       - ../.env
     secrets:
@@ -96,7 +96,7 @@ services:
       - inception_network
     depends_on:
       - mariadb
-    restart: unless-stopped
+    restart: always
 
   # BONUS: Static Website (Portfolio/Resume)
   static-site:
@@ -108,7 +108,7 @@ services:
       - inception_network
     ports:
       - "8082:8082"
-    restart: unless-stopped
+    restart: always
     env_file:
       - ../.env
 
@@ -121,7 +121,7 @@ services:
       - "3001:3001"
     networks:
       - inception_network
-    restart: unless-stopped
+    restart: always
     volumes:
       - cuma_data:/usr/src/app/data
       - /var/run/docker.sock:/var/run/docker.sock
