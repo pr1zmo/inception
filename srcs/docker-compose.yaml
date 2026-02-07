@@ -124,7 +124,6 @@ services:
     restart: always
     volumes:
       - cuma_data:/usr/src/app/data
-      - /var/run/docker.sock:/var/run/docker.sock
 
 networks:
   inception_network:
