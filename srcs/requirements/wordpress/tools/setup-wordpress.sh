@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-sleep 5
-
 # Read secrets
 MYSQL_PASSWORD=$(cat /run/secrets/db_password)
 WP_ADMIN_PASSWORD=$(cat /run/secrets/wp_admin_password)
