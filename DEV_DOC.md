@@ -33,13 +33,13 @@
 ## 🏗️ Building and Running
 
 ```bash
-make all          # Build and start all services
-make down         # Stop all containers
-make clean        # Stop and remove volumes
-make purge        # Full cleanup (delete everything)
-make re           # Complete rebuild
+make all          # Build and start mandatory services
+make bonus        # Build and start all services (including bonus)
+make dirs         # Create required data directories
+make clean        # Remove unused images and volumes
+make fclean       # Stop everything, remove all images and volumes
+make re           # Full clean and rebuild
 make logs         # View all logs
-make ps           # Show container status
 ```
 
 ---
@@ -120,7 +120,7 @@ All services communicate via Docker bridge network: `inception_network`
 
 ```bash
 # Check container status
-make ps
+docker compose -f srcs/docker-compose.yaml ps
 
 # View logs
 make logs
@@ -132,7 +132,7 @@ docker logs -f <service-name>
 docker builder prune -af
 
 # Full reset
-make purge
+make fclean
 make all
 ```
 

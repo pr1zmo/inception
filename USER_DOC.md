@@ -21,10 +21,11 @@
 ## 🚀 Managing Services
 
 ```bash
-make all           # Start all services
-make down          # Stop all services
-make re            # Full rebuild
-make ps            # Check status
+make all           # Build and start mandatory services
+make bonus         # Build and start all services (including bonus)
+make clean         # Remove unused images and volumes
+make fclean        # Stop everything, remove all images and volumes
+make re            # Full clean and rebuild
 make logs          # View logs
 ```
 
@@ -66,7 +67,7 @@ cat secrets/ftp_password.txt           # FTP user
 To change a password:
 ```bash
 nano secrets/wp_admin_password.txt     # Edit
-make down && make all                  # Restart services
+make re                                # Rebuild services
 ```
 
 ---
@@ -90,7 +91,7 @@ ftp zelbassa.42.fr
 
 ```bash
 # All services running?
-make ps
+docker compose -f srcs/docker-compose.yaml ps
 
 # Website accessible?
 curl -k https://localhost:443
@@ -119,10 +120,10 @@ docker exec -i mariadb mysql -u root -p$(cat secrets/db_root_password.txt) wordp
 
 | Issue | Solution |
 |-------|----------|
-| Website won't load | Check `make ps` and `docker logs nginx` |
+| Website won't load | Run `make logs` and `docker logs nginx` |
 | Can't login to WordPress | Verify `secrets/wp_admin_password.txt` |
 | Database errors | Check `docker logs mariadb` |
-| Services won't start | Run `make purge` then `make all` |
+| Services won't start | Run `make fclean` then `make all` |
 
 ---
 
